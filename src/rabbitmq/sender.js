@@ -4,7 +4,7 @@
 //     amount: "amount",
 // })
 
-export default class Sender {
+module.exports = class Sender {
     constructor(queue) {
       this.queue = queue
     }

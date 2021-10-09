@@ -1,6 +1,6 @@
-import Web3 from 'web3'
+const Web3 = require('web3');
 
-export default class Web3Client {
+module.exports =  class Web3Client {
     constructor(provider, privateKey, options) {
         this.web3 = new Web3(provider)
         this.web3.eth.accounts.wallet.add(privateKey);
@@ -9,11 +9,11 @@ export default class Web3Client {
 
     transaction(address, amount, gasPrice, nonce) {
         return new Promise(async (resolve, reject) => {
-            const accounts = await web3.eth.getAccounts()
-            const formattedAddress = web3.utils.toChecksumAddress(address)
+            const account = await this.web3.eth.accounts.wallet[0].address
+            const formattedAddress = this.web3.utils.toChecksumAddress(address)
             this.web3.eth
             .sendTransaction({
-                from: accounts[0],
+                from: account,
                 to: formattedAddress,
                 value: amount,
                 gas: 21000,
@@ -42,5 +42,16 @@ export default class Web3Client {
             console.log(`current block is at ${block.number} while tx was in ${tx.blockNumber}`)
             return false
         }
+    }
+
+    async getNonce() {
+        const account = await this.web3.eth.accounts.wallet[0].address
+        const nonce = await this.web3.eth.getTransactionCount(account)
+        return nonce
+    }
+
+    async getReceipt(txHash) {
+        const receipt = await this.web3.eth.getTransactionReceipt(txHash)
+        return receipt
     }
 }

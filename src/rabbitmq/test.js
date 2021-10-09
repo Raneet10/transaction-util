@@ -2,7 +2,7 @@ const { getQueue, Sender, Worker } = require("./index")
 const Web3 = require('web3')
 const fs = require('fs')
 const path = require('path')
-const config = require("./config/index")
+const config = require("../config/index")
 const provider = new Web3.providers.HttpProvider(config.maticRPC);
 
 const addToQueue = async (sender) => {
@@ -29,7 +29,7 @@ const addToQueue = async (sender) => {
 const exampleScript = async () => {
     try {
         // connect to rabitMq and get a connection channel
-        const queue = getQueue()
+        const queue = await getQueue()
 
         // create sender object with queue as parameter
         const sender = new Sender(queue)
@@ -38,7 +38,7 @@ const exampleScript = async () => {
         await addToQueue(sender)
 
         // create worker object with parameter
-        const worker = new Worker(provider, queue, {}, 12, config.privateKey)
+        const worker = new Worker(provider, queue, {}, 2, config.privateKey)
 
         // start consuming the queue
         worker.start("send-transactions")

@@ -32,7 +32,7 @@ const QClient = class {
     }
 };
 
-export default getQueue = async () => {
+module.exports = getQueue = async () => {
     const q = new QClient()
     await q.initialize()
     return q

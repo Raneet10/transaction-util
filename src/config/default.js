@@ -14,5 +14,5 @@ module.exports = {
   mainRPC: process.env.MAIN_RPC,
   maticRPC: process.env.MATIC_RPC,
   maticGasStation: process.env.MATIC_GAS_STATION,
-  rabbitMqHost: process.env.RABBITMQ_HOST
+  rabbitMqHost: process.env.RABBITMQ_HOST || 'amqp://localhost'
 }

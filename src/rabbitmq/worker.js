@@ -2,7 +2,7 @@ const Web3Client = require('./Web3Client')
 const fs = require('fs')
 const path = require('path')
 
-export default class Worker {
+module.exports = class Worker {
     constructor(provider, queue, options, blockConfirmation, privateKey) {
         this.queue = queue;
         this.web3Client = new Web3Client(provider, privateKey, options);
@@ -16,7 +16,7 @@ export default class Worker {
 
             // check if this job is already in progress
             const status = this._getJobStatus(job.id)
-            const receipt = null
+            let receipt = null
             if (status == 'progress') {
                 const allStatus = this._getStatus()
                 const currentJob = allStatus[job.id]
@@ -48,9 +48,11 @@ export default class Worker {
     _getStatus() {
         let status = {}
         const statusFile = `status.json`
-        if (fs.existsSync(statusFile)) {
+        if (fs.existsSync(path.resolve(__dirname, statusFile))) {
             try {
-                status = JSON.parse(fs.readFileSync(path.resolve(__dirname, resultFile)).toString())
+                const fileData = fs.readFileSync(path.resolve(__dirname, statusFile))
+                const stringValue = fileData.toString() || '{}'
+                status = JSON.parse(stringValue)
             } catch (e) {
                 console.log("error in getting status", e)
             }
@@ -60,10 +62,9 @@ export default class Worker {
 
     async handleTransaction(job) {
         console.log('job.userAddress', job.userAddress, 'amount', job.amount)
-        const txHash = await this.web3Client.transaction(job)
+        const txHash = await this.web3Client.transaction(job.userAddress, job.amount)
         const status = this._getStatus()
         status[job.id] = { ...job, txHash, status: 'progress' }
-        console.log(status)
         this._writeStatusToFile(status)
 
         let gasPrice = 0
@@ -83,11 +84,11 @@ export default class Worker {
         while (i < 8) {
             if (await this.web3Client.isConfirmed(txHash, this.blockConfirmation)) {
                 console.log(txHash, 'confirmed')
-                const receipt = await web3.eth.getTransactionReceipt(txHash)
+                const receipt = await this.web3Client.getReceipt(txHash)
                 if (receipt != null) return receipt
             }
             i += 1
-            await Worker.delay(10)
+            await Worker.delay(5)
         }
         return null
     }
@@ -112,6 +113,6 @@ export default class Worker {
 
     _writeStatusToFile(status) {
         const statusFile = `status.json`
-        fs.writeFileSync(path.resolve(__dirname, resultFile), JSON.stringify(status, null, 2)) // Indent 2 spaces
+        fs.writeFileSync(path.resolve(__dirname, statusFile), JSON.stringify(status, null, 2)) // Indent 2 spaces
     }
 }
